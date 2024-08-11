@@ -19,7 +19,7 @@ public class MoneyTransferTest {
     int secondCardBalance;
 
     @BeforeEach
-     void setup() {
+    void setup() {
         var loginPage = open("http://localhost:9999", LoginPage.class);
         var authInfo = getAuthInfo();
         var verificationPage = loginPage.validLogin(authInfo);
@@ -31,6 +31,7 @@ public class MoneyTransferTest {
         secondCardBalance = dashboardPage.getCardBalance(secondCardInfo);
     }
 
+
     @Test
     void shouldTransferFromFirstToSecond() {
 
@@ -41,8 +42,8 @@ public class MoneyTransferTest {
         dashboardPage = transferPage.makeValidTransfer(String.valueOf(amount), firstCardInfo);
         var actualBalanceFirstCard = dashboardPage.getCardBalance(firstCardInfo);
         var actualBalanceSecondCard = dashboardPage.getCardBalance(secondCardInfo);
-        Assertions.assertEquals(expectedBalanceFirstCard, actualBalanceFirstCard);
         Assertions.assertEquals(expectedBalanceSecondCard, actualBalanceSecondCard);
+        Assertions.assertEquals(expectedBalanceFirstCard, actualBalanceFirstCard);
     }
 
     @Test
@@ -54,6 +55,22 @@ public class MoneyTransferTest {
         dashboardPage = transferPage.makeValidTransfer(String.valueOf(amount), secondCardInfo);
         var actualBalanceSecondCard = dashboardPage.getCardBalance(secondCardInfo);
         var actualBalanceFirstCard = dashboardPage.getCardBalance(firstCardInfo);
+        Assertions.assertEquals(expectedBalanceSecondCard, actualBalanceSecondCard);
+        Assertions.assertEquals(expectedBalanceFirstCard, actualBalanceFirstCard);
+    }
+
+    @Test
+    void shouldErrorMessageIfAmountExceedsBalance() {
+
+        var amount = generateInvalidAmount(secondCardBalance);
+        var expectedBalanceSecondCard = secondCardBalance - amount;
+        var expectedBalanceFirstCard = firstCardBalance + amount;
+        var transferPage = dashboardPage.selectCardToTransfer(firstCardInfo);
+        transferPage.makeTransfer(String.valueOf(amount), secondCardInfo);
+        transferPage.findErrorMessage("Перевод суммы, превышающей остаток на карте списания, невозможен");
+        dashboardPage.reloadDashboardPage();
+        var actualBalanceFirstCard = dashboardPage.getCardBalance(firstCardInfo);
+        var actualBalanceSecondCard = dashboardPage.getCardBalance(secondCardInfo);
         Assertions.assertEquals(expectedBalanceSecondCard, actualBalanceSecondCard);
         Assertions.assertEquals(expectedBalanceFirstCard, actualBalanceFirstCard);
     }
